@@ -3,6 +3,7 @@ import connectDB from '@/lib/mongodb';
 import Event from '@/database/event.model';
 import { v2 as cloudinary } from 'cloudinary';
 
+//* Create Event API
 export async function POST(req: NextRequest) {
   try {
     await connectDB();
@@ -68,6 +69,32 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         message: 'Event creation failed',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
+  }
+}
+
+//* Get All Events API
+export async function GET(req: NextRequest) {
+  try {
+    await connectDB();
+    const events = await Event.find().sort({ createdAt: -1 });
+    if (!events) {
+      return NextResponse.json(
+        {
+          message: 'No events found',
+        },
+        { status: 404 }
+      );
+    }
+    return NextResponse.json({ message: 'Events fetched successfully', events }, { status: 200 });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json(
+      {
+        message: 'Event fetching Events',
         error: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
