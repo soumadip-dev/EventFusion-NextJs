@@ -109,26 +109,21 @@ const EventSchema = new Schema<IEvent>(
   }
 );
 
-// Pre-save hook for slug generation and data normalization
-EventSchema.pre('save', function (next) {
+// Updated pre-save hook (fixed "next is not a function")
+EventSchema.pre('save', function () {
   const event = this as IEvent;
 
-  // Generate slug only if title changed or document is new
   if (event.isModified('title') || event.isNew) {
     event.slug = generateSlug(event.title);
   }
 
-  // Normalize date to ISO format if it's not already
   if (event.isModified('date')) {
     event.date = normalizeDate(event.date);
   }
 
-  // Normalize time format (HH:MM)
   if (event.isModified('time')) {
     event.time = normalizeTime(event.time);
   }
-
-  next();
 });
 
 // Helper function to generate URL-friendly slug
@@ -153,7 +148,6 @@ function normalizeDate(dateString: string): string {
 
 // Helper function to normalize time format
 function normalizeTime(timeString: string): string {
-  // Handle various time formats and convert to HH:MM (24-hour format)
   const timeRegex = /^(\d{1,2}):(\d{2})(\s*(AM|PM))?$/i;
   const match = timeString.trim().match(timeRegex);
 
@@ -161,17 +155,16 @@ function normalizeTime(timeString: string): string {
     throw new Error('Invalid time format. Use HH:MM or HH:MM AM/PM');
   }
 
-  let hours = parseInt(match[1]);
+  let hours = parseInt(match[1], 10);
   const minutes = match[2];
   const period = match[4]?.toUpperCase();
 
   if (period) {
-    // Convert 12-hour to 24-hour format
     if (period === 'PM' && hours !== 12) hours += 12;
     if (period === 'AM' && hours === 12) hours = 0;
   }
 
-  if (hours < 0 || hours > 23 || parseInt(minutes) < 0 || parseInt(minutes) > 59) {
+  if (hours < 0 || hours > 23 || parseInt(minutes, 10) < 0 || parseInt(minutes, 10) > 59) {
     throw new Error('Invalid time values');
   }
 
