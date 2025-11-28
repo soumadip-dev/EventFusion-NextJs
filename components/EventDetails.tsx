@@ -1,6 +1,9 @@
 import BookEvent from '@/components/BookEvent';
+import { IEvent } from '@/database';
+import { getSimilerEventsBySlug } from '@/lib/actions/event.actions';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
+import EventCard from './EventCard';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
@@ -16,7 +19,7 @@ const EventAgenda = ({ agendaItems }: { agendaItems: string[] }) => (
     <h2>Agenda</h2>
     <ul>
       {agendaItems.map((item, index) => (
-        <li key={item}>{item}</li>
+        <li key={`${index}-${item}`}>{item}</li>
       ))}
     </ul>
   </div>
@@ -24,8 +27,8 @@ const EventAgenda = ({ agendaItems }: { agendaItems: string[] }) => (
 
 const EventTags = ({ tags }: { tags: string[] }) => (
   <div className="flex flex-row gap-1.5 flex-wrap">
-    {tags.map(tag => (
-      <div key={tag} className="pill">
+    {tags.map((tag, i) => (
+      <div key={`${tag}-${i}`} className="pill">
         {tag}
       </div>
     ))}
@@ -75,6 +78,24 @@ const EventDetails = async ({ params }: { params: Promise<string> }) => {
 
   const booking = 10;
 
+  const similerEvents: IEvent[] = await getSimilerEventsBySlug(slug);
+
+  console.log(similerEvents);
+
+  let parsedTags: string[] = [];
+  try {
+    if (typeof tags === 'string') {
+      parsedTags = JSON.parse(tags);
+    } else if (Array.isArray(tags)) {
+      parsedTags = tags;
+    } else {
+      parsedTags = [];
+    }
+  } catch (e) {
+    console.error('Failed to parse tags, falling back to empty array', e);
+    parsedTags = [];
+  }
+
   return (
     <section id="event">
       <div className="header">
@@ -106,7 +127,7 @@ const EventDetails = async ({ params }: { params: Promise<string> }) => {
             <p>{organizer}</p>
           </section>
 
-          <EventTags tags={tags[0].split(',')} />
+          <EventTags tags={parsedTags} />
         </div>
         <aside className="booking">
           <div className="signup-card">
@@ -119,6 +140,13 @@ const EventDetails = async ({ params }: { params: Promise<string> }) => {
             <BookEvent eventId={event._id} slug={event.slug} />
           </div>
         </aside>
+      </div>
+      <div className="flex w-full flex-col gap-4 pt-20">
+        <h2>Similar Events</h2>
+        <div className="events">
+          {similerEvents.length > 0 &&
+            similerEvents.map((event: IEvent) => <EventCard key={event.title} {...event} />)}
+        </div>
       </div>
     </section>
   );
