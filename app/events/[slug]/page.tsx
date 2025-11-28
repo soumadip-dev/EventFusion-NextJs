@@ -10,11 +10,52 @@ const EventDetailItem = ({ icon, alt, label }: { icon: string; alt: string; labe
   </div>
 );
 
+const EventAgenda = ({ agendaItems }: { agendaItems: string[] }) => (
+  <div className="agenda">
+    <h2>Agenda</h2>
+    <ul>
+      {agendaItems.map((item, index) => (
+        <li key={item}>{item}</li>
+      ))}
+    </ul>
+  </div>
+);
+
+const EventTags = ({ tags }: { tags: string[] }) => (
+  <div className="flex flex-row gap-1.5 flex-wrap">
+    {tags.map(tag => (
+      <div key={tag} className="pill">
+        {tag}
+      </div>
+    ))}
+  </div>
+);
+
 const EventDetailsPage = async ({ params }: { params: Promise<{ slug: string }> }) => {
   const { slug } = await params;
+  let event;
+  try {
+    const request = await fetch(`${BASE_URL}/api/events/${slug}`, {
+      next: {
+        revalidate: 60,
+      },
+    });
+    if (!request.ok) {
+      if (request.status === 404) {
+        return notFound();
+      }
+      throw new Error(`Failed to fetch event: ${request.statusText}`);
+    }
+    const response = await request.json();
+    event = response.event;
 
-  const request = await fetch(`${BASE_URL}/api/events/${slug}`);
-  const { event } = await request.json();
+    if (!event) {
+      return notFound();
+    }
+  } catch (error) {
+    console.error('error fetching event: ', error);
+    return notFound();
+  }
 
   const {
     description,
@@ -59,7 +100,17 @@ const EventDetailsPage = async ({ params }: { params: Promise<{ slug: string }> 
             <EventDetailItem icon="/icons/mode.svg" alt="mode" label={mode} />
             <EventDetailItem icon="/icons/audience.svg" alt="audience" label={audience} />
           </section>
+          <EventAgenda agendaItems={agenda} />
+          <section className="flex-col-gap-2">
+            <h2>About the Organizer</h2>
+            <p>{organizer}</p>
+          </section>
+
+          <EventTags tags={tags[0].split(',')} />
         </div>
+        <aside className="booking">
+          <p className="text-lg font-semibold"> Book Event</p>
+        </aside>
       </div>
     </section>
   );
