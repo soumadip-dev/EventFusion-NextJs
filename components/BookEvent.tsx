@@ -5,9 +5,17 @@ import { useState } from 'react';
 const BookEvent = ({ eventId, slug }: { eventId: string; slug: string }) => {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    setSubmitting(true);
+
+    setTimeout(() => {
+      setSubmitting(false);
+      setSubmitted(true);
+    }, 2000);
   };
 
   return (
@@ -27,12 +35,17 @@ const BookEvent = ({ eventId, slug }: { eventId: string; slug: string }) => {
             />
           </div>
 
-          <button type="submit" className="button-submit">
-            Submit
+          <button
+            type="submit"
+            className="button-submit"
+            disabled={submitting || email.length === 0}
+          >
+            {submitting ? 'Submitting...' : 'Submit'}
           </button>
         </form>
       )}
     </div>
   );
 };
+
 export default BookEvent;

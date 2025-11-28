@@ -33,7 +33,6 @@ const EventTags = ({ tags }: { tags: string[] }) => (
 );
 
 const EventDetails = async ({ params }: { params: Promise<string> }) => {
-  
   const slug = await params;
 
   let event;
@@ -74,6 +73,8 @@ const EventDetails = async ({ params }: { params: Promise<string> }) => {
     organizer,
   } = event;
 
+  const booking = 10;
+
   return (
     <section id="event">
       <div className="header">
@@ -110,7 +111,11 @@ const EventDetails = async ({ params }: { params: Promise<string> }) => {
         <aside className="booking">
           <div className="signup-card">
             <h2>Book Your Spot</h2>
-
+            {booking > 0 ? (
+              <p className="text-sm">Join {booking} people who have already booked this event</p>
+            ) : (
+              <p className="text-sm">Be the first to book your spot</p>
+            )}
             <BookEvent eventId={event._id} slug={event.slug} />
           </div>
         </aside>
